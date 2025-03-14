@@ -1,0 +1,74 @@
+DATA: 14/03/2025
+
+Exercício 1: Classificação de idade
+-Peça a idade do usuário e classifique-a de acordo com a tabela;
+-Menor de 12 anos = criança;
+-Entre 12 e 14 anos = adolescente;
+-18 anos ou mais = adultos. 
+
+#idade = int (input('Digite uma idade:'))
+
+#if idade < 12 : 
+     #print ('Essa pessoa é uma criança.')
+#if idade >= 12 and idade <= 17 : 
+   # print ('Essa pessoa é um adolescente.')
+#elif idade >= 18 : 
+    #print ('Essa pessoa é um adulto.')
+
+
+Exercício 2: Maior de dois números
+-Solicite dois números ao usuário e exiba o maior dele. 
+-Caso sejam iguais, informe isso.
+
+#numero1 = int (input('Digite o primeiro número:'))
+#numero2 = int (input('Digite um segundo número:'))
+
+#if numero1 > numero2 :
+   #print (f'{numero1} é o maior número.' )
+#if numero2 > numero1 :
+   #print (f'{numero2} é o maior número.')
+#if numero1 == numero2 : 
+   #print ('Os dois números são iguais.')
+
+
+Exercício 3: Verificação de vogal ou consoante
+-Peça ao usuário para digitar uma letra e informe se é uma vogal ou uma consoante.
+
+#letra = input('Digite uma letra:')
+
+#if letra == 'a' or letra == 'e' or letra == 'i' or letra == 'o' or letra == 'u':
+   # print ('Essa letra é uma vogal.')
+#else:
+    #print('Essa letra é uma consoante.')
+
+
+Exercício 4: Comparação de senhas
+-Solicite ao usuário qque defina uma senha e, exiba "Acesso permitido";
+-Se não, exiba "As senhas não coincidem.".
+
+#senha = input('Digite sua senha:')
+#senha2 = input('Confirme a senha:')
+
+#if senha == senha2 :
+ #print('Acesso permitido.')
+#else: 
+ #print('As senhas não coincidem.')
+
+
+Exercício 5: Calculo de média e aprovação
+-Peça ao usuário para digitar 3 notas e calcule a média;
+-Se a média for maior ou igual a 7, o aluno está aprovado;
+-Caso contrário, está reprovado.
+
+#nota1 = int (input('Qual a primeira nota?'))
+#nota2 = int (input('Qual a segunda nota?'))
+#nota3 = int (input('Qual a terceira nota?'))
+
+#soma = nota1 + nota2 + nota3
+#media = soma/3
+
+#if media >= 7 :
+    #print (f'{media} foi sua média, você foi aprovado.')
+#else:
+    #print (f'{media} foi sua média, você foi reprovado.')
+
