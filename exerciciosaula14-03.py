@@ -1,4 +1,4 @@
-#DATA: 14/03/2025
+#DATA: 14/03/2025 
 
 #Exercício 1: Classificação de idade
 #-Peça a idade do usuário e classifique-a de acordo com a tabela;
