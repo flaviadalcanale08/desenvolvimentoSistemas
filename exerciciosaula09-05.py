@@ -77,7 +77,12 @@ while contador <= 10:
 
 #Peça um número N ao usuário e mostre todos os números de 1 até N.
 
-
+numero = int (input(f"Digite um número: "))
+for numero in range (1, numero+1): 
+    print(numero)
+    
 #Peça ao usuário uma palavra e mostre ela ao contrário.
+
+
 #Peça um número ao usuário e diga se ele é múltiplo de 3.
 #Peça ao usuário para digitar 3 nomes e mostre todos eles em ordem alfabética.
