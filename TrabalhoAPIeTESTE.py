@@ -1,63 +1,154 @@
-from fastapi import FastAPI, HTTPException, status
-from pydantic import BaseModel
-from typing import Dict
-import uuid
+import unittest
+from fastapi.testclient import TestClient
+from annaapi import app, db_tarefa  # importa sua API e o banco de tarefas
 
-app = FastAPI(
-    title="API de Tarefas",
-    description="API para realizar consultas de tarefas.",
-    version="1.0.0"
-)
+client = TestClient(app)
 
-class Tarefa(BaseModel):
-    id: str = uuid.uuid4()
-    titulo: str
-    descricao: str
-    concluida: bool = False
+class TestAnnaAPI(unittest.TestCase):
 
+    def setUp(self):
+        db_tarefa.clear()  # garante que o banco está vazio antes de cada teste
 
-db_tarefa: Dict[int, Tarefa] = { 1: Tarefa(titulo="Estudar para a prova.", descricao="Ler o conteúdo para a prova e fazer exercícios."),
-                                 2: Tarefa(titulo="Ir ao mercado", descricao="Ir ao supermercado e comprar itens essenciais."),
-                                 3: Tarefa(titulo="Fazer exercícios físicos", descricao="Ir à academia ou fazer exercícios em casa.")}
-
-
-@app.get("/") 
-def read_root():
-    return {"message": "Bem-vindo à API de cadastro de tarefas! Acesse /docs para a documentação interativa."}
-
-@app.post("/Tarefas/{id}", status_code=status.HTTP_201_CREATED) #Cadastrando uma nova tarefa.
-def criar_tarefa(tarefa: Tarefa, id: int):
-    if id in db_tarefa or len(tarefa.titulo) < 3:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Esse cadastro está invalido.")
     
-    db_tarefa[id] = Tarefa
-    return {"message": "A tarefa foi cadastrado com sucesso!", "Tarefa": id, "titulo": Tarefa}
+    # TESTE 1 – Criar tarefa
+    
+    def test_criar_tarefa(self):
+        nova_tarefa = {
+            "id": "123",
+            "titulo": "Estudar",
+            "descricao": "Revisar conteúdo",
+            "concluida": False
+        }
 
-@app.get("/Tarefas", status_code=status.HTTP_200_OK) #Listando todas as tarefas cadastradas.
-def todos_as_tarefas():
-    return db_tarefa
+        response = client.post("/Tarefas/", json=nova_tarefa)
 
-@app.get("/Tarefas/{id}") #Listando todas as tarefas cadastradas.
-def pesquisar_as_tarefas(id: int):
-    if id not in db_tarefa:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cadastro de tarefa não encontrado.")
-    if id in db_tarefa:
-        raise HTTPException(status_code=status.HTTP_200_OK, detail="Cadastro de tarefa pesquisado foi: {tarefa.titulo}{tarefa.tdescricao}{tarefa.concluida}")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["mensagem"], "Tarefa criada com sucesso")
+        self.assertIn("123", db_tarefa)
 
-@app.delete("/Tarefas/{id}") #Deletando uma tarefa cadastrada.
-def deletar_cadastro(id: int):
-    if id not in db_tarefa:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cadastro de tarefa não encontrado.")
-    del db_tarefa[id]
-    raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+    
+    # TESTE 2 – Criar tarefa repetida
+    
+    def test_criar_tarefa_repetida(self):
+        tarefa = {
+            "id": "abc",
+            "titulo": "Limpar",
+            "descricao": "Limpar a casa",
+            "concluida": False
+        }
+
+        client.post("/Tarefas/", json=tarefa)
+        response = client.post("/Tarefas/", json=tarefa)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["detail"], "ID já existente")
+
+    
+    # TESTE 3 – Listar todas as tarefas
+
+    def test_listar_todas_as_tarefas(self):
+        tarefa = {
+            "id": "001",
+            "titulo": "Dormir",
+            "descricao": "Descansar bem",
+            "concluida": False
+        }
+
+        client.post("/Tarefas/", json=tarefa)
+        response = client.get("/Tarefas/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("001", response.json())
+
+    # TESTE 4 – Buscar tarefa existente
    
-@app.put("/Tarefas/{id}") #Atualizando uma tarefa cadastrada.
-def atualizar_tarefa(id: int, tarefa: Tarefa):
-    if id not in db_tarefa:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cadastro de tarefa não encontrado.")
+    def test_buscar_tarefa_existente(self):
+        tarefa = {
+            "id": "x1",
+            "titulo": "Academia",
+            "descricao": "Treinar pernas",
+            "concluida": False
+        }
+
+        client.post("/Tarefas/", json=tarefa)
+        response = client.get("/Tarefas/x1")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["titulo"], "Academia")
+
     
-    if id in db_tarefa and len(tarefa.titulo) < 3:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Título inválido.")
+    # TESTE 5 – Buscar tarefa inexistente
     
-    db_tarefa[id] = tarefa
-    raise HTTPException(status_code=status.HTTP_200_OK, detail="Cadastro de tarefa atualizado com sucesso. Sua tarefa é: {tarefa.titulo}")
+    def test_buscar_tarefa_inexistente(self):
+        response = client.get("/Tarefas/999")
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()["detail"], "Tarefa não encontrada.")
+
+    
+    # TESTE 6 – Atualizar tarefa existente
+    
+    def test_atualizar_tarefa(self):
+        tarefa = {
+            "id": "55",
+            "titulo": "Ler",
+            "descricao": "Ler um livro",
+            "concluida": False
+        }
+
+        client.post("/Tarefas/", json=tarefa)
+
+        tarefa_atualizada = {
+            "id": "55",
+            "titulo": "Ler Bíblia",
+            "descricao": "Estudo espiritual",
+            "concluida": True
+        }
+
+        response = client.put("/Tarefas/55", json=tarefa_atualizada)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["mensagem"], "Tarefa atualizada com sucesso")
+        self.assertEqual(db_tarefa["55"]["titulo"], "Ler Bíblia")
+        self.assertTrue(db_tarefa["55"]["concluida"])
+
+    
+    # TESTE 7 – Atualizar tarefa inexistente
+    
+    def test_atualizar_tarefa_inexistente(self):
+        tarefa = {
+            "id": "xyz",
+            "titulo": "Aula",
+            "descricao": "Ir para a aula",
+            "concluida": False
+        }
+
+        response = client.put("/Tarefas/xyz", json=tarefa)
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()["detail"], "Tarefa não encontrada.")
+
+    # TESTE 8 – Deletar tarefa existente
+    def test_deletar_tarefa(self):
+        tarefa = {
+            "id": "del1",
+            "titulo": "Passear",
+            "descricao": "Ir ao parque",
+            "concluida": False
+        }
+
+        client.post("/Tarefas/", json=tarefa)
+        response = client.delete("/Tarefas/del1")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["mensagem"], "Tarefa excluída com sucesso")
+        self.assertNotIn("del1", db_tarefa)
+
+    # TESTE 9 – Deletar tarefa inexistente
+   
+    def test_deletar_tarefa_inexistente(self):
+        response = client.delete("/Tarefas/xxx")
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()["detail"], "Tarefa não encontrada.")
+
+
+if __name__ == "__main__":
+    unittest.main()
